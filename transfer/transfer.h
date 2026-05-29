@@ -103,4 +103,4 @@ static inline void prolong_bilinear(double** coarse,
     }
 }
 
-#endif /* TRANSFER_H */
+#endif
