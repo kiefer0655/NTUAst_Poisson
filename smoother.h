@@ -4,10 +4,7 @@
 #include <algorithm>
 #include <string>
 #include <omp.h>
-
-int idx(int i, int j, int N){
-        return i * N + j;
-}
+#include "utils.h"
 
 void sor_update(
     int N,
