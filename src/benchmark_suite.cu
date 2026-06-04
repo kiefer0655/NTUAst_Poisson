@@ -7,6 +7,7 @@
 #include "../include/utils.h"
 #include "../include/multigrid.h"
 #include "../include/multigrid_cuda.cuh"
+#include "../include/smoother.h"
 
 struct BenchmarkResult {
     int N;
