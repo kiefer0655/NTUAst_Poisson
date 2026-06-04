@@ -49,7 +49,7 @@ int main() {
         results.push_back({N, "FMG", "GPU", 1, time_fg, get_error(u_fg, u_exact, N)});
     }
 
-    std::ofstream file("results_gpu.csv");
+    std::ofstream file("results/results_gpu.csv");
     file << "N,Method,Hardware,Iterations,Time_s,Error\n";
     for (const auto& r : results) {
         file << r.N << "," << r.method << "," << r.hardware << "," << r.iters << "," 
@@ -58,6 +58,6 @@ int main() {
     }
     file.close();
 
-    std::cout << "Benchmarking Complete! Data saved to results_gpu.csv\n";
+    std::cout << "Benchmarking Complete! Data saved to results/results_gpu.csv\n";
     return 0;
 }

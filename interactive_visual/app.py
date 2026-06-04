@@ -17,8 +17,8 @@ def index():
 
 @app.route('/api/benchmark')
 def api_benchmark():
-    cpu_csv = '../results_cpu.csv'
-    gpu_csv = '../results_gpu.csv'
+    cpu_csv = '../results/results_cpu.csv'
+    gpu_csv = '../results/results_gpu.csv'
     
     if not os.path.exists(cpu_csv) and not os.path.exists(gpu_csv):
         return jsonify({"error": "No result CSVs found. Run benchmark_cpu or benchmark_gpu first."}), 404

@@ -73,7 +73,7 @@ int main() {
         }
     }
 
-    std::ofstream file("results_cpu.csv");
+    std::ofstream file("results/results_cpu.csv");
     file << "N,Method,Hardware,Iterations,Time_s,Error\n";
     for (const auto& r : results) {
         file << r.N << "," << r.method << "," << r.hardware << "," << r.iters << "," 
@@ -82,6 +82,6 @@ int main() {
     }
     file.close();
 
-    std::cout << "Benchmarking Complete! Data saved to results_cpu.csv\n";
+    std::cout << "Benchmarking Complete! Data saved to results/results_cpu.csv\n";
     return 0;
 }
