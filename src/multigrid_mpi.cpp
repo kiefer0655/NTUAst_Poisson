@@ -206,7 +206,7 @@ void v_cycle_mpi(std::vector<double>& u_local, const std::vector<double>& phi_lo
     std::vector<double> r_local = get_residual_mpi(u_local, phi_local, N, local_rows, h2, rank, P);
     exchange_ghost_cells(r_local, N, local_rows, rank, P);
 
-    int N_coarse = (N - 1) / 2 + 1;
+    // N_coarse already calculated at the top
     int K_coarse = (N_coarse - 1) / P;
     int local_rows_coarse = (rank == P - 1) ? (N_coarse - rank * K_coarse) : K_coarse;
 
@@ -246,7 +246,7 @@ void w_cycle_mpi(std::vector<double>& u_local, const std::vector<double>& phi_lo
     std::vector<double> r_local = get_residual_mpi(u_local, phi_local, N, local_rows, h2, rank, P);
     exchange_ghost_cells(r_local, N, local_rows, rank, P);
 
-    int N_coarse = (N - 1) / 2 + 1;
+    // N_coarse already calculated at the top
     int K_coarse = (N_coarse - 1) / P;
     int local_rows_coarse = (rank == P - 1) ? (N_coarse - rank * K_coarse) : K_coarse;
 
