@@ -34,7 +34,8 @@ void run_benchmark() {
     std::vector<BenchmarkResult> results;
     double w = 1.0;
     
-    for (int N : Ns) {
+    for (int run = 0; run < 3; run++) {
+        for (int N : Ns) {
         if (rank == 0) std::cout << "Benchmarking Grid N=" << N << "...\n";
         
         int K = (N - 1) / P;
@@ -98,15 +99,16 @@ void run_benchmark() {
         benchmark_cycle("V-Cycle", (N <= 129) ? 10 : 5, 1);
         
         // W-Cycle
-        if (N <= 513) benchmark_cycle("W-Cycle", (N <= 129) ? 5 : 2, 2);
+        if (N <= 8193) benchmark_cycle("W-Cycle", (N <= 129) ? 5 : 2, 2);
         
         // FMG
         benchmark_cycle("FMG", 1, 3);
         
         // SOR
-        if (N <= 129) {
-            int sor_iters = (N == 33) ? 1000 : (N == 65 ? 5000 : 20000);
+        if (N <= 2049) {
+            int sor_iters = (N <= 65) ? 5000 : 20000;
             benchmark_cycle("SOR", sor_iters, 4);
+        }
         }
     }
 

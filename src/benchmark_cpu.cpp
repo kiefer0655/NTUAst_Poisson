@@ -28,7 +28,8 @@ int main() {
     
     double w = 1.0;
     
-    for (int N : Ns) {
+    for (int run = 0; run < 3; run++) {
+        for (int N : Ns) {
         std::cout << "Benchmarking Grid N=" << N << "...\n";
         std::vector<double> u_exact = get_exact_solution(N);
         std::vector<double> phi = get_phi_exact_solution(N);
@@ -43,7 +44,7 @@ int main() {
         results.push_back({N, "V-Cycle", "CPU", v_iters_cpu, time_vc, get_error(u_vc, u_exact, N)});
 
         // ========================== CPU W-Cycle ==========================
-        if (N <= 513) {
+        if (N <= 8193) {
             int w_iters = (N <= 129) ? 5 : 2;
             std::vector<double> u_wc(N * N, 0.0);
             t1 = std::chrono::high_resolution_clock::now();
@@ -62,7 +63,7 @@ int main() {
         results.push_back({N, "FMG", "CPU", 1, time_fc, get_error(u_fc, u_exact, N)});
 
         // ========================== CPU SOR (Baseline) ==========================
-        if (N <= 129) {
+        if (N <= 2049) {
             std::vector<double> u_sor(N * N, 0.0);
             int sor_iters = (N == 33) ? 1000 : (N == 65 ? 5000 : 20000);
             double h2 = 1.0 / ((N - 1) * (N - 1));
@@ -71,6 +72,7 @@ int main() {
             t2 = std::chrono::high_resolution_clock::now();
             double time_sor = std::chrono::duration<double>(t2 - t1).count();
             results.push_back({N, "SOR", "CPU", sor_iters, time_sor, get_error(u_sor, u_exact, N)});
+        }
         }
     }
 

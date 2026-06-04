@@ -26,7 +26,8 @@ int main() {
     
     double w = 1.0;
     
-    for (int N : Ns) {
+    for (int run = 0; run < 3; run++) {
+        for (int N : Ns) {
         std::cout << "Benchmarking Grid N=" << N << "...\n";
         std::vector<double> u_exact = get_exact_solution(N);
         std::vector<double> phi = get_phi_exact_solution(N);
@@ -49,6 +50,7 @@ int main() {
         t2 = std::chrono::high_resolution_clock::now();
         double time_fg = std::chrono::duration<double>(t2 - t1).count();
         results.push_back({N, "FMG", "GPU", 1, time_fg, get_error(u_fg, u_exact, N)});
+    }
     }
 
     std::ofstream file("results/results_gpu.csv");
