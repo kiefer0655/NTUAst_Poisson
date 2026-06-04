@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -O3 -fopenmp -Wall -Iinclude
 
 MPICXX = mpicxx
-MPICXXFLAGS = -O3 -Wall -Iinclude
+MPICXXFLAGS = -O3 -fopenmp -Wall -Iinclude
 
 NVCC = nvcc
 NVCCFLAGS = -O3 -Iinclude -arch=sm_89
