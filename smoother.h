@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -6,7 +7,7 @@
 #include <omp.h>
 #include "utils.h"
 
-void sor_update(
+inline void sor_update(
     int N,
     std::vector<double>& U,
     const std::vector<double>& Rho,
@@ -39,7 +40,7 @@ void sor_update(
     }
 }
 
-void SOR_smooth(
+inline void SOR_smooth(
     int N,
     std::vector<double>& U,
     const std::vector<double>& Rho,

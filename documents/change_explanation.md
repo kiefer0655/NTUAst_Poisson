@@ -17,8 +17,8 @@
 ## 4. Compilation Bug Fixes (`smoother.h` and `utils.h`)
 * **What I did:** 
   * Removed an unused `reduction(max:r)` clause from the OpenMP pragma in `smoother.h`.
-  * Added `#pragma once` to `utils.h` and marked all its functions as `inline`.
-* **Why:** `r` was not declared in the `smoother.h` loop, causing a compiler error. Furthermore, `utils.h` lacked include guards and `inline` keywords, which caused "multiple definition" linker errors when included by both the tests and the headers.
+  * Added `#pragma once` and `inline` keywords to all functions in **both** `utils.h` and `smoother.h`.
+* **Why:** `r` was not declared in the `smoother.h` loop, causing a compiler error. Furthermore, `utils.h` and `smoother.h` originally lacked include guards and `inline` keywords, which caused "multiple definition" linker errors when they were included by multiple source files simultaneously (like `benchmark.cpp` and `multigrid.cpp`).
 
 ## How to Compile and Run Tests for Commit Verification:
 You can verify the changes work by running:
