@@ -147,27 +147,27 @@ void v_cycle_device(double* d_u, const double* d_phi, int N, int nu1, int nu2, d
 
     // 2. Residual
     double* d_r;
-    cudaMalloc(&d_r, N * N * sizeof(double));
+    cudaMallocManaged(&d_r, N * N * sizeof(double));
     get_residual_kernel<<<blocks, THREADS_PER_BLOCK>>>(d_u, d_phi, d_r, N, h2);
 
     // 3. Restrict
     int N_coarse = (N - 1) / 2 + 1;
     double* d_rc;
-    cudaMalloc(&d_rc, N_coarse * N_coarse * sizeof(double));
+    cudaMallocManaged(&d_rc, N_coarse * N_coarse * sizeof(double));
     int blocks_c = div_up(N_coarse * N_coarse, THREADS_PER_BLOCK);
     restrict_kernel<<<blocks_c, THREADS_PER_BLOCK>>>(d_r, d_rc, N, N_coarse);
     cudaFree(d_r);
 
     // 4. Coarse grid solve
     double* d_ec;
-    cudaMalloc(&d_ec, N_coarse * N_coarse * sizeof(double));
+    cudaMallocManaged(&d_ec, N_coarse * N_coarse * sizeof(double));
     cudaMemset(d_ec, 0, N_coarse * N_coarse * sizeof(double));
     v_cycle_device(d_ec, d_rc, N_coarse, nu1, nu2, w);
     cudaFree(d_rc);
 
     // 5. Prolongate
     double* d_ef;
-    cudaMalloc(&d_ef, N * N * sizeof(double));
+    cudaMallocManaged(&d_ef, N * N * sizeof(double));
     prolong_kernel<<<blocks, THREADS_PER_BLOCK>>>(d_ec, d_ef, N, N_coarse);
     cudaFree(d_ec);
 
@@ -188,8 +188,8 @@ void v_cycle_cuda_run(std::vector<double>& u, const std::vector<double>& phi, in
     double* d_phi;
     size_t size = N * N * sizeof(double);
 
-    checkCuda(cudaMalloc(&d_u, size));
-    checkCuda(cudaMalloc(&d_phi, size));
+    checkCuda(cudaMallocManaged(&d_u, size));
+    checkCuda(cudaMallocManaged(&d_phi, size));
 
     checkCuda(cudaMemcpy(d_u, u.data(), size, cudaMemcpyHostToDevice));
     checkCuda(cudaMemcpy(d_phi, phi.data(), size, cudaMemcpyHostToDevice));
@@ -221,12 +221,12 @@ void fmg_cycle_device(double* d_u, const double* d_phi, int N, int nu1, int nu2,
     int N_coarse = (N - 1) / 2 + 1;
     
     double* d_phi_coarse;
-    checkCuda(cudaMalloc(&d_phi_coarse, N_coarse * N_coarse * sizeof(double)));
+    checkCuda(cudaMallocManaged(&d_phi_coarse, N_coarse * N_coarse * sizeof(double)));
     int blocks_c = div_up(N_coarse * N_coarse, THREADS_PER_BLOCK);
     restrict_kernel<<<blocks_c, THREADS_PER_BLOCK>>>(d_phi, d_phi_coarse, N, N_coarse);
 
     double* d_u_coarse;
-    checkCuda(cudaMalloc(&d_u_coarse, N_coarse * N_coarse * sizeof(double)));
+    checkCuda(cudaMallocManaged(&d_u_coarse, N_coarse * N_coarse * sizeof(double)));
     checkCuda(cudaMemset(d_u_coarse, 0, N_coarse * N_coarse * sizeof(double)));
 
     fmg_cycle_device(d_u_coarse, d_phi_coarse, N_coarse, nu1, nu2, w);
@@ -247,8 +247,8 @@ void fmg_cycle_cuda_run(std::vector<double>& u, const std::vector<double>& phi, 
     double* d_phi;
     size_t size = N * N * sizeof(double);
 
-    checkCuda(cudaMalloc(&d_u, size));
-    checkCuda(cudaMalloc(&d_phi, size));
+    checkCuda(cudaMallocManaged(&d_u, size));
+    checkCuda(cudaMallocManaged(&d_phi, size));
 
     checkCuda(cudaMemcpy(d_u, u.data(), size, cudaMemcpyHostToDevice));
     checkCuda(cudaMemcpy(d_phi, phi.data(), size, cudaMemcpyHostToDevice));
