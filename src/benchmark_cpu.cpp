@@ -4,6 +4,7 @@
 #include <iomanip>
 #include <chrono>
 #include <fstream>
+#include <omp.h>
 #include "../include/utils.h"
 #include "../include/multigrid.h"
 #include "../include/smoother.h"
@@ -83,5 +84,50 @@ int main() {
     file.close();
 
     std::cout << "Benchmarking Complete! Data saved to results/results_cpu.csv\n";
+
+    // =========================================================================
+    // Strong Scaling Benchmark
+    // =========================================================================
+    std::cout << "\n========================================\n";
+    std::cout << "Running Strong Scaling Benchmark (N=2049)\n";
+    std::cout << "========================================\n";
+    
+    std::vector<int> thread_counts = {1, 2, 4, 8, 16, 32, 64, 144};
+    int scale_N = 2049;
+    std::vector<double> u_exact_scale = get_exact_solution(scale_N);
+    std::vector<double> phi_scale = get_phi_exact_solution(scale_N);
+    std::vector<BenchmarkResult> scale_results;
+
+    for (int threads : thread_counts) {
+        std::cout << "Benchmarking with " << threads << " Threads...\n";
+        omp_set_num_threads(threads);
+        
+        // Measure V-Cycle
+        std::vector<double> u_vc(scale_N * scale_N, 0.0);
+        auto t1 = std::chrono::high_resolution_clock::now();
+        for(int i=0; i<5; i++) v_cycle(u_vc, phi_scale, scale_N, 2, 2, w);
+        auto t2 = std::chrono::high_resolution_clock::now();
+        double time_vc = std::chrono::duration<double>(t2 - t1).count();
+        scale_results.push_back({scale_N, "V-Cycle", "CPU-" + std::to_string(threads) + "T", 5, time_vc, get_error(u_vc, u_exact_scale, scale_N)});
+
+        // Measure FMG
+        std::vector<double> u_fc(scale_N * scale_N, 0.0);
+        t1 = std::chrono::high_resolution_clock::now();
+        fmg_cycle(u_fc, phi_scale, scale_N, 2, 2, w);
+        t2 = std::chrono::high_resolution_clock::now();
+        double time_fc = std::chrono::duration<double>(t2 - t1).count();
+        scale_results.push_back({scale_N, "FMG", "CPU-" + std::to_string(threads) + "T", 1, time_fc, get_error(u_fc, u_exact_scale, scale_N)});
+    }
+
+    std::ofstream scale_file("results/scaling_cpu.csv");
+    scale_file << "N,Method,Hardware,Iterations,Time_s,Error\n";
+    for (const auto& r : scale_results) {
+        scale_file << r.N << "," << r.method << "," << r.hardware << "," << r.iters << "," 
+             << std::fixed << std::setprecision(6) << r.time_s << "," 
+             << std::scientific << std::setprecision(4) << r.err << "\n";
+    }
+    scale_file.close();
+    std::cout << "Scaling Benchmark Complete! Data saved to results/scaling_cpu.csv\n";
+
     return 0;
 }
