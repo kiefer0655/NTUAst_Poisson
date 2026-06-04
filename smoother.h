@@ -15,7 +15,7 @@ void sor_update(
 ){
     // this function will preform inplace update on U
 
-    #pragma omp parallel reduction(max:r)
+    #pragma omp parallel
     {
     for(int color=0; color<2;color ++){
         // color = 0 orange, color = 1 blue

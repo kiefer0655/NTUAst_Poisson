@@ -1,3 +1,5 @@
+#pragma once
+
 #include <iostream>
 #include <vector>
 #include <cmath>
@@ -6,12 +8,12 @@
 #include <omp.h>
 
 //indexing tools
-int idx(int i, int j, int N){
+inline int idx(int i, int j, int N){
         return i * N + j;
 }
 
 //residual
-std::vector<double> get_residual_grid(
+inline std::vector<double> get_residual_grid(
     const std::vector<double>& u,
     const std::vector<double>& phi,
     int N,
@@ -40,7 +42,7 @@ std::vector<double> get_residual_grid(
 
 // for code testing
 //test eqation: ∇^2 u=−2π2sin(πx)sin(πy)
-std::vector<double> get_exact_solution(int N){
+inline std::vector<double> get_exact_solution(int N){
     std::vector<double> u_exact(N * N, 0.0);
 
     double h = 1.0 / (N - 1);
@@ -58,7 +60,7 @@ std::vector<double> get_exact_solution(int N){
     return u_exact;
 }
 
-std::vector<double> get_phi_exact_solution(int N){
+inline std::vector<double> get_phi_exact_solution(int N){
 
     std::vector<double> phi(N*N,0.0);
 
@@ -78,7 +80,7 @@ std::vector<double> get_phi_exact_solution(int N){
     return phi;
 }
 
-double get_error(
+inline double get_error(
     const std::vector<double>&U,
     const std::vector<double>&U_exact,
     int N
