@@ -33,15 +33,7 @@ int main() {
 
         // ========================== GPU V-Cycle ==========================
         int v_iters_gpu = (N <= 129) ? 10 : 5;
-        if (N <= 2049) {
-            std::vector<double> u_sor(N * N, 0.0);
-            auto t_s = std::chrono::high_resolution_clock::now();
-            // Assuming appropriate setup for SOR call
-            sor_cuda_run(u_sor, phi, N, w, 20000);
-            auto t_e = std::chrono::high_resolution_clock::now();
-            double time_sor = std::chrono::duration<double>(t_e - t_s).count();
-            results.push_back({N, "SOR", "GPU", 20000, time_sor, get_error(u_sor, u_exact, N)});
-        }
+
 
         std::vector<double> u_vg(N * N, 0.0);
         auto t1 = std::chrono::high_resolution_clock::now();
