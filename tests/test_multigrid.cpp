@@ -7,7 +7,6 @@
 
 int main() {
     int N = 65; // Multigrid usually uses N = 2^k + 1
-    double h2 = 1.0 / ((N - 1) * (N - 1));
     double w = 1.0; 
     int max_iters = 10; // Multigrid converges extremely fast compared to SOR!
 
