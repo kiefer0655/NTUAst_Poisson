@@ -3,6 +3,7 @@
 ## 1. Refactored `transfer/transfer.h` (Person B's Work)
 * **What I did:** Converted the grid storage from C-style 2D pointers (`double**`) to modern C++ 1D vectors (`std::vector<double>`).
 * **Why:** To make it fully compatible with Person A's `smoother.h` and `Relax.cpp`, which use `std::vector<double>`. This 1D contiguous memory layout is also essential for performance, OpenMP caching, and the upcoming CUDA (GPU) and MPI implementations.
+* **Parallelization (Phase 3):** I also added `#pragma omp parallel for collapse(2) schedule(static)` to all of the nested 2D loops in `transfer.h`. This ensures that restriction and prolongation take full advantage of your 144-core CPU machines.
 * **Respecting the Author:** I preserved Person B's exact mathematical logic, coefficients, loop structures, and comments. The only thing that changed was `grid[i][j]` becoming `grid[idx(i, j, N)]`, using the helper function from `utils.h`.
 
 ## 2. Added `test_smoother.cpp` (Person A's Test)

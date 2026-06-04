@@ -1,9 +1,9 @@
 #ifndef TRANSFER_H
 #define TRANSFER_H
 
-#include <vector>
 #include <stdlib.h>
 #include <stdio.h>
+#include <omp.h>
 #include "../utils.h"
 
 
@@ -29,6 +29,7 @@ static inline void restrict_full_weighting(const std::vector<double>& fine,
     }
 
     /* full-weighting */
+    #pragma omp parallel for collapse(2) schedule(static)
     for (int ic = 1; ic < N_coarse - 1; ic++) {
         for (int jc = 1; jc < N_coarse - 1; jc++) {
             int if_ = 2 * ic;   /* fine grid row */
@@ -56,24 +57,29 @@ static inline void prolong_bilinear(const std::vector<double>& coarse,
 {
     int N_coarse = (N_fine - 1) / 2 + 1;
 
+    #pragma omp parallel for collapse(2) schedule(static)
     for (int i = 0; i < N_fine; i++)
         for (int j = 0; j < N_fine; j++)
             fine[idx(i, j, N_fine)] = 0.0;
 
+    #pragma omp parallel for collapse(2) schedule(static)
     for (int ic = 0; ic < N_coarse; ic++)
         for (int jc = 0; jc < N_coarse; jc++)
             fine[idx(2*ic, 2*jc, N_fine)] = coarse[idx(ic, jc, N_coarse)];
 
+    #pragma omp parallel for collapse(2) schedule(static)
     for (int ic = 0; ic < N_coarse; ic++)
         for (int jc = 0; jc < N_coarse - 1; jc++)
             fine[idx(2*ic, 2*jc+1, N_fine)] =
                 0.5 * (coarse[idx(ic, jc, N_coarse)] + coarse[idx(ic, jc+1, N_coarse)]);
 
+    #pragma omp parallel for collapse(2) schedule(static)
     for (int ic = 0; ic < N_coarse - 1; ic++)
         for (int jc = 0; jc < N_coarse; jc++)
             fine[idx(2*ic+1, 2*jc, N_fine)] =
                 0.5 * (coarse[idx(ic, jc, N_coarse)] + coarse[idx(ic+1, jc, N_coarse)]);
 
+    #pragma omp parallel for collapse(2) schedule(static)
     for (int ic = 0; ic < N_coarse - 1; ic++)
         for (int jc = 0; jc < N_coarse - 1; jc++)
             fine[idx(2*ic+1, 2*jc+1, N_fine)] =
