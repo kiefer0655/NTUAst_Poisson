@@ -5,12 +5,20 @@ A comprehensive High-Performance Computing (HPC) implementation of the 2D Poisso
 ## 1. Problem Description
 
 This project solves the 2-Dimensional Poisson Equation:
-$$ \nabla^2 u(x, y) = \rho(x, y) $$
+```math
+\nabla^2 u(x, y) = \rho(x, y)
+```
 
 Subject to Homogeneous Dirichlet Boundary Conditions ($u = 0$ on the boundaries).
 To strictly verify our numerical accuracy, we employ the **Method of Manufactured Solutions (MMS)**. 
-- We define the exact analytical solution as: $u_{\text{exact}}(x,y) = \sin(\pi x)\sin(\pi y)$
-- This mathematically demands the source term: $\rho(x,y) = 2\pi^2 \sin(\pi x)\sin(\pi y)$
+- We define the exact analytical solution as: 
+  ```math
+  u_{\text{exact}}(x,y) = \sin(\pi x)\sin(\pi y)
+  ```
+- This mathematically demands the source term: 
+  ```math
+  \rho(x,y) = 2\pi^2 \sin(\pi x)\sin(\pi y)
+  ```
 
 By forcing this exact mathematical setup, we can compute the precise $L_2$ error norm of our numerical approximations against the true analytical reality, proving the algorithm's correctness across all parallel architectures.
 
@@ -113,6 +121,8 @@ To generate fair and scientifically sound data:
 Our results beautifully validate the theoretical math. The Baseline **SOR** method scales at $O(N^2)$; as the grid doubles, the execution time explodes by roughly 4x. 
 However, **FMG (Full Multigrid)** and the **V-Cycle** showcase a flat linear $O(N)$ curve. Multigrid proves that intelligently moving data between frequencies mathematically dominates sheer brute-force smoothing.
 
+![Algorithmic Scaling](results/images/algorithmic_scaling.png)
+
 ### 2. V-Cycle vs W-Cycle 
 While W-Cycles theoretically offer better error reduction per cycle by spending more time on the coarse grids, our benchmarking proves it is highly inefficient for Parallel execution. The constant bouncing between levels creates immense **Thread Synchronization Overhead**. The V-Cycle (and by extension, FMG) drastically outperforms the W-Cycle in pure wall-clock execution time.
 
@@ -121,11 +131,15 @@ The **RTX 4090 GPU** completely destroyed the CPU architectures on the $2049 \ti
 - It achieved nearly a **10x - 12x speedup** over the 144-core CPU.
 - Stencil algorithms (like Poisson Smoothers) are overwhelmingly **Memory Bandwidth Bound** rather than Compute Bound. The RTX 4090's 1,008 GB/s GDDR6X VRAM bandwidth allowed it to chew through the grid infinitely faster than the Xeon Platinum's standard DDR4 memory controller could feed its 72 cores.
 
+![Hardware Comparison](results/images/hardware_comparison.png)
+
 ### 4. Strong Scaling & Amdahl's Law
 We ran a Strong Scaling benchmark on `ws7` (keeping $N=2049$ fixed and sweeping OpenMP threads from 1 to 144).
 - **The Sweet Spot:** Performance scaled perfectly from 1 to 8 threads.
 - **The Memory Wall:** Between 8 and 16 threads, performance flattened. The CPU cores were calculating the math faster than the RAM could supply the data.
 - **The Overhead Collapse (Amdahl's Law):** At 144 threads, the FMG algorithm took *longer* than running on a single thread! Forcing 144 threads to wake up, synchronize, and divide a tiny $3 \times 3$ grid at the bottom of the V-Cycle meant the CPU spent 99% of its time coordinating threads and 1% doing math.
+
+![Strong Scaling](results/images/strong_scaling.png)
 
 ---
 
