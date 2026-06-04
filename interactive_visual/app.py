@@ -8,8 +8,8 @@ import numpy as np
 app = Flask(__name__)
 
 # Ensure binaries are compiled
-subprocess.run(['make', 'benchmark_suite'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-subprocess.run(['make', 'solve_canvas'], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+subprocess.run(['make', 'benchmark_suite'], cwd='..', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+subprocess.run(['make', 'solve_canvas'], cwd='..', stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 @app.route('/')
 def index():
@@ -17,11 +17,12 @@ def index():
 
 @app.route('/api/benchmark')
 def api_benchmark():
-    if not os.path.exists('results.csv'):
-        return jsonify({"error": "results.csv not found. Please run ./benchmark_suite on the server."}), 404
+    csv_path = '../results.csv'
+    if not os.path.exists(csv_path):
+        return jsonify({"error": "results.csv not found. Please run ./benchmark_suite in the parent directory."}), 404
         
     data = []
-    with open('results.csv', 'r') as f:
+    with open(csv_path, 'r') as f:
         reader = csv.DictReader(f)
         for row in reader:
             data.append({
@@ -57,8 +58,8 @@ def api_solve_canvas():
         env['CUDA_VISIBLE_DEVICES'] = '3'
         
         result = subprocess.run(
-            ['./solve_canvas', str(N), in_file, out_file],
-            capture_output=True, text=True, env=env
+            ['./solve_canvas', str(N), f'interactive_visual/{in_file}', f'interactive_visual/{out_file}'],
+            cwd='..', capture_output=True, text=True, env=env
         )
         
         if result.returncode != 0:
