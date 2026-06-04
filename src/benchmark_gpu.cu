@@ -21,7 +21,7 @@ int main() {
     std::cout << "Running GPU Benchmark Suite\n";
     std::cout << "========================================\n";
 
-    std::vector<int> Ns = {33, 65, 129, 257, 513, 1025, 2049, 4097, 8193, 16385, 32769, 65537, 131073};
+    std::vector<int> Ns = {33, 65, 129, 257, 513, 1025, 2049, 4097, 8193, 16385, 32769};
     std::vector<BenchmarkResult> results;
     
     double w = 1.0;
