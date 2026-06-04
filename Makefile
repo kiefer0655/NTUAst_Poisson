@@ -2,7 +2,7 @@ CXX = g++
 CXXFLAGS = -O3 -fopenmp -Wall -Iinclude
 
 NVCC = nvcc
-NVCCFLAGS = -O3 -Iinclude
+NVCCFLAGS = -O3 -Iinclude -arch=sm_89
 
 all: benchmark test_smoother test_transfer test_multigrid benchmark_cuda
 
