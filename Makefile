@@ -1,10 +1,13 @@
 CXX = g++
 CXXFLAGS = -O3 -fopenmp -Wall -Iinclude
 
+MPICXX = mpicxx
+MPICXXFLAGS = -O3 -Wall -Iinclude
+
 NVCC = nvcc
 NVCCFLAGS = -O3 -Iinclude -arch=sm_89
 
-all: benchmark test_smoother test_transfer test_multigrid benchmark_cuda
+all: benchmark test_smoother test_transfer test_multigrid benchmark_cuda benchmark_cpu benchmark_gpu benchmark_mpi solve_canvas
 
 benchmark: src/benchmark.cpp src/multigrid.cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@
@@ -17,6 +20,9 @@ benchmark_cpu: src/benchmark_cpu.cpp src/multigrid.cpp
 
 benchmark_gpu: src/benchmark_gpu.cu src/multigrid_cuda.cu src/multigrid.cpp
 	$(NVCC) $(NVCCFLAGS) -Xcompiler -fopenmp $^ -o $@
+
+benchmark_mpi: src/benchmark_mpi.cpp src/multigrid_mpi.cpp src/multigrid.cpp
+	$(MPICXX) $(MPICXXFLAGS) $^ -o $@
 
 solve_canvas: src/solve_canvas.cu src/multigrid_cuda.cu src/multigrid.cpp
 	$(NVCC) $(NVCCFLAGS) -Xcompiler -fopenmp $^ -o $@
@@ -31,4 +37,4 @@ test_multigrid: tests/test_multigrid.cpp src/multigrid.cpp
 	$(CXX) $(CXXFLAGS) $^ -o $@
 
 clean:
-	rm -f benchmark test_smoother test_transfer test_multigrid benchmark_cuda benchmark_cpu benchmark_gpu solve_canvas
+	rm -f benchmark test_smoother test_transfer test_multigrid benchmark_cuda benchmark_cpu benchmark_gpu benchmark_mpi solve_canvas
