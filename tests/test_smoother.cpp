@@ -2,8 +2,8 @@
 #include <vector>
 #include <cmath>
 #include <cassert>
-#include "smoother.h"
-#include "utils.h"
+#include "../include/smoother.h"
+#include "../include/utils.h"
 
 int main() {
     int N = 33;

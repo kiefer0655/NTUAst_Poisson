@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <omp.h>
-#include "../utils.h"
+#include "utils.h"
 
 
 static inline std::vector<double> make_coarse_grid(int N_fine, int* N_coarse_out) {

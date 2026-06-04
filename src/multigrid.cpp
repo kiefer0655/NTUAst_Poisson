@@ -1,7 +1,7 @@
-#include "multigrid.h"
-#include "smoother.h"
-#include "transfer/transfer.h"
-#include "utils.h"
+#include "../include/multigrid.h"
+#include "../include/smoother.h"
+#include "../include/transfer.h"
+#include "../include/utils.h"
 
 void v_cycle(std::vector<double>& u, const std::vector<double>& phi, int N, int nu1, int nu2, double w) {
     double h2 = 1.0 / ((N - 1) * (N - 1));

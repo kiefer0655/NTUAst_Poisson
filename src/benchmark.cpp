@@ -3,9 +3,9 @@
 #include <cmath>
 #include <omp.h>
 #include <iomanip>
-#include "utils.h"
-#include "multigrid.h"
-#include "smoother.h"
+#include "../include/utils.h"
+#include "../include/multigrid.h"
+#include "../include/smoother.h"
 
 // Standalone wrapper to test convergence speed of different solvers
 void benchmark_solver(int N, std::string name, int mode) {

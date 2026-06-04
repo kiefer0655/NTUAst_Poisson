@@ -2,8 +2,8 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
-#include "utils.h"
-#include "multigrid.h"
+#include "../include/utils.h"
+#include "../include/multigrid.h"
 
 int main() {
     int N = 65; // Multigrid usually uses N = 2^k + 1

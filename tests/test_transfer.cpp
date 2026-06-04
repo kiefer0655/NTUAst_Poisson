@@ -2,8 +2,8 @@
 #include <vector>
 #include <cassert>
 #include <cmath>
-#include "utils.h"
-#include "transfer/transfer.h"
+#include "../include/utils.h"
+#include "../include/transfer.h"
 
 int main() {
     std::cout << "Testing Person B's Transfer Functions (1D Vector Refactor)...\n";
