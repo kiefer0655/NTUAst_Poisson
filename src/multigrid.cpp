@@ -79,3 +79,22 @@ void w_cycle(std::vector<double>& u, const std::vector<double>& phi, int N, int 
     // 6. Post-smooth
     SOR_smooth(N, u, phi, h2, w, nu2);
 }
+
+void fmg_cycle(std::vector<double>& u, const std::vector<double>& phi, int N, int nu1, int nu2, double w) {
+    if (N <= 3) {
+        double h2 = 1.0 / ((N - 1) * (N - 1));
+        SOR_smooth(N, u, phi, h2, w, 500);
+        return;
+    }
+
+    int N_coarse;
+    std::vector<double> phi_coarse = make_coarse_grid(N, &N_coarse);
+    restrict_full_weighting(phi, phi_coarse, N);
+
+    std::vector<double> u_coarse(N_coarse * N_coarse, 0.0);
+    fmg_cycle(u_coarse, phi_coarse, N_coarse, nu1, nu2, w);
+
+    prolong_bilinear(u_coarse, u, N);
+
+    v_cycle(u, phi, N, nu1, nu2, w);
+}

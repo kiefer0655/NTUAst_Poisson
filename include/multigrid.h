@@ -12,3 +12,6 @@ void v_cycle(std::vector<double>& u, const std::vector<double>& phi, int N, int 
 
 // Performs one W-cycle of the Multigrid method
 void w_cycle(std::vector<double>& u, const std::vector<double>& phi, int N, int nu1, int nu2, double w);
+
+// Full Multigrid (FMG)
+void fmg_cycle(std::vector<double>& u, const std::vector<double>& phi, int N, int nu1, int nu2, double w);

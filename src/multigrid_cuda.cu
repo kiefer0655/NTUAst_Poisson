@@ -205,3 +205,61 @@ void v_cycle_cuda_run(std::vector<double>& u, const std::vector<double>& phi, in
     cudaFree(d_u);
     cudaFree(d_phi);
 }
+
+// Device-side FMG logic
+void fmg_cycle_device(double* d_u, const double* d_phi, int N, int nu1, int nu2, double w) {
+    if (N <= 3) {
+        double h2 = 1.0 / ((N - 1) * (N - 1));
+        int blocks = div_up(N * N, THREADS_PER_BLOCK);
+        for (int i = 0; i < 500; i++) {
+            sor_kernel<<<blocks, THREADS_PER_BLOCK>>>(d_u, d_phi, N, h2, w, 0);
+            sor_kernel<<<blocks, THREADS_PER_BLOCK>>>(d_u, d_phi, N, h2, w, 1);
+        }
+        return;
+    }
+
+    int N_coarse = (N - 1) / 2 + 1;
+    
+    double* d_phi_coarse;
+    checkCuda(cudaMalloc(&d_phi_coarse, N_coarse * N_coarse * sizeof(double)));
+    int blocks_c = div_up(N_coarse * N_coarse, THREADS_PER_BLOCK);
+    restrict_kernel<<<blocks_c, THREADS_PER_BLOCK>>>(d_phi, d_phi_coarse, N, N_coarse);
+
+    double* d_u_coarse;
+    checkCuda(cudaMalloc(&d_u_coarse, N_coarse * N_coarse * sizeof(double)));
+    checkCuda(cudaMemset(d_u_coarse, 0, N_coarse * N_coarse * sizeof(double)));
+
+    fmg_cycle_device(d_u_coarse, d_phi_coarse, N_coarse, nu1, nu2, w);
+
+    cudaFree(d_phi_coarse);
+
+    int blocks = div_up(N * N, THREADS_PER_BLOCK);
+    prolong_kernel<<<blocks, THREADS_PER_BLOCK>>>(d_u_coarse, d_u, N, N_coarse);
+
+    cudaFree(d_u_coarse);
+
+    v_cycle_device(d_u, d_phi, N, nu1, nu2, w);
+}
+
+// Host wrapper for FMG
+void fmg_cycle_cuda_run(std::vector<double>& u, const std::vector<double>& phi, int N, int nu1, int nu2, double w) {
+    double* d_u;
+    double* d_phi;
+    size_t size = N * N * sizeof(double);
+
+    checkCuda(cudaMalloc(&d_u, size));
+    checkCuda(cudaMalloc(&d_phi, size));
+
+    checkCuda(cudaMemcpy(d_u, u.data(), size, cudaMemcpyHostToDevice));
+    checkCuda(cudaMemcpy(d_phi, phi.data(), size, cudaMemcpyHostToDevice));
+
+    fmg_cycle_device(d_u, d_phi, N, nu1, nu2, w);
+    
+    checkCuda(cudaPeekAtLastError());
+    checkCuda(cudaDeviceSynchronize());
+
+    checkCuda(cudaMemcpy(u.data(), d_u, size, cudaMemcpyDeviceToHost));
+
+    cudaFree(d_u);
+    cudaFree(d_phi);
+}
