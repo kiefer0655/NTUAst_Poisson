@@ -17,22 +17,28 @@ def index():
 
 @app.route('/api/benchmark')
 def api_benchmark():
-    csv_path = '../results.csv'
-    if not os.path.exists(csv_path):
-        return jsonify({"error": "results.csv not found. Please run ./benchmark_suite in the parent directory."}), 404
+    cpu_csv = '../results_cpu.csv'
+    gpu_csv = '../results_gpu.csv'
+    
+    if not os.path.exists(cpu_csv) and not os.path.exists(gpu_csv):
+        return jsonify({"error": "No result CSVs found. Run benchmark_cpu or benchmark_gpu first."}), 404
         
     data = []
-    with open(csv_path, 'r') as f:
-        reader = csv.DictReader(f)
-        for row in reader:
-            data.append({
-                "N": int(row["N"]),
-                "Method": row["Method"],
-                "Hardware": row["Hardware"],
-                "Iterations": int(row["Iterations"]),
-                "Time_s": float(row["Time_s"]),
-                "Error": float(row["Error"])
-            })
+    
+    for csv_path in [cpu_csv, gpu_csv]:
+        if os.path.exists(csv_path):
+            with open(csv_path, 'r') as f:
+                reader = csv.DictReader(f)
+                for row in reader:
+                    data.append({
+                        "N": int(row["N"]),
+                        "Method": row["Method"],
+                        "Hardware": row["Hardware"],
+                        "Iterations": int(row["Iterations"]),
+                        "Time_s": float(row["Time_s"]),
+                        "Error": float(row["Error"])
+                    })
+                    
     return jsonify(data)
 
 @app.route('/api/solve_canvas', methods=['POST'])

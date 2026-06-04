@@ -6,7 +6,6 @@
 #include <fstream>
 #include "../include/utils.h"
 #include "../include/multigrid.h"
-#include "../include/multigrid_cuda.cuh"
 #include "../include/smoother.h"
 
 struct BenchmarkResult {
@@ -20,7 +19,7 @@ struct BenchmarkResult {
 
 int main() {
     std::cout << "========================================\n";
-    std::cout << "Running Comprehensive Final Benchmark\n";
+    std::cout << "Running CPU Benchmark Suite\n";
     std::cout << "========================================\n";
 
     std::vector<int> Ns = {33, 65, 129, 257, 513, 1025, 2049};
@@ -42,15 +41,6 @@ int main() {
         double time_vc = std::chrono::duration<double>(t2 - t1).count();
         results.push_back({N, "V-Cycle", "CPU", v_iters_cpu, time_vc, get_error(u_vc, u_exact, N)});
 
-        // ========================== GPU V-Cycle ==========================
-        int v_iters_gpu = (N <= 129) ? 10 : 5;
-        std::vector<double> u_vg(N * N, 0.0);
-        t1 = std::chrono::high_resolution_clock::now();
-        v_cycle_cuda_run(u_vg, phi, N, 2, 2, w, v_iters_gpu);
-        t2 = std::chrono::high_resolution_clock::now();
-        double time_vg = std::chrono::duration<double>(t2 - t1).count();
-        results.push_back({N, "V-Cycle", "GPU", v_iters_gpu, time_vg, get_error(u_vg, u_exact, N)});
-
         // ========================== CPU W-Cycle ==========================
         if (N <= 513) {
             int w_iters = (N <= 129) ? 5 : 2;
@@ -65,18 +55,10 @@ int main() {
         // ========================== CPU FMG ==========================
         std::vector<double> u_fc(N * N, 0.0);
         t1 = std::chrono::high_resolution_clock::now();
-        fmg_cycle(u_fc, phi, N, 2, 2, w); // FMG only needs 1 iteration usually
+        fmg_cycle(u_fc, phi, N, 2, 2, w); 
         t2 = std::chrono::high_resolution_clock::now();
         double time_fc = std::chrono::duration<double>(t2 - t1).count();
         results.push_back({N, "FMG", "CPU", 1, time_fc, get_error(u_fc, u_exact, N)});
-
-        // ========================== GPU FMG ==========================
-        std::vector<double> u_fg(N * N, 0.0);
-        t1 = std::chrono::high_resolution_clock::now();
-        fmg_cycle_cuda_run(u_fg, phi, N, 2, 2, w); // FMG 1 iteration
-        t2 = std::chrono::high_resolution_clock::now();
-        double time_fg = std::chrono::duration<double>(t2 - t1).count();
-        results.push_back({N, "FMG", "GPU", 1, time_fg, get_error(u_fg, u_exact, N)});
 
         // ========================== CPU SOR (Baseline) ==========================
         if (N <= 129) {
@@ -91,7 +73,7 @@ int main() {
         }
     }
 
-    std::ofstream file("results.csv");
+    std::ofstream file("results_cpu.csv");
     file << "N,Method,Hardware,Iterations,Time_s,Error\n";
     for (const auto& r : results) {
         file << r.N << "," << r.method << "," << r.hardware << "," << r.iters << "," 
@@ -100,6 +82,6 @@ int main() {
     }
     file.close();
 
-    std::cout << "Benchmarking Complete! Data saved to results.csv\n";
+    std::cout << "Benchmarking Complete! Data saved to results_cpu.csv\n";
     return 0;
 }
