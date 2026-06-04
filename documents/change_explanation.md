@@ -13,6 +13,12 @@
 * **What I did:** Wrote a standard `main()` test with `cassert`.
 * **Why:** To verify that the newly refactored `transfer.h` code compiles and mathematically correctly moves values from the fine grid down to the coarse grid (restriction) and back up (prolongation).
 
+## 4. Compilation Bug Fixes (`smoother.h` and `utils.h`)
+* **What I did:** 
+  * Removed an unused `reduction(max:r)` clause from the OpenMP pragma in `smoother.h`.
+  * Added `#pragma once` to `utils.h` and marked all its functions as `inline`.
+* **Why:** `r` was not declared in the `smoother.h` loop, causing a compiler error. Furthermore, `utils.h` lacked include guards and `inline` keywords, which caused "multiple definition" linker errors when included by both the tests and the headers.
+
 ## How to Compile and Run Tests for Commit Verification:
 You can verify the changes work by running:
 ```bash
