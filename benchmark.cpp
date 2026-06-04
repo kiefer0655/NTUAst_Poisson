@@ -34,10 +34,17 @@ void benchmark_solver(int N, std::string name, int mode) {
             iters += 1;
         }
         
-        double err = get_error(u, u_exact, N);
-        if (err < 1e-4) break;
+        std::vector<double> r = get_residual_grid(u, phi, N, h2);
+        double res_norm = 0.0;
+        #pragma omp parallel for reduction(+:res_norm) schedule(static)
+        for (int i = 0; i < N*N; i++) {
+            res_norm += r[i] * r[i];
+        }
+        res_norm = std::sqrt(res_norm / (N*N));
+        
+        if (res_norm < 1e-6) break; // Converged when discrete residual is near zero
         if (iters > 50000) {
-            std::cout << "Did not converge..." << std::endl;
+            std::cout << "Did not converge... (residual: " << res_norm << ")" << std::endl;
             break; 
         }
     }
