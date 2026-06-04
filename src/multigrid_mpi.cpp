@@ -189,7 +189,8 @@ std::vector<double> get_residual_mpi(const std::vector<double>& u_local, const s
 
 void v_cycle_mpi(std::vector<double>& u_local, const std::vector<double>& phi_local, 
                  int N, int rank, int P, int nu1, int nu2, double w) {
-    if (N - 1 < P || N <= 3) {
+    int N_coarse = (N - 1) / 2 + 1;
+    if (N_coarse - 1 < P || N <= 3) {
         gather_and_solve(u_local, phi_local, N, rank, P, nu1, nu2, w, 1);
         return;
     }
@@ -229,7 +230,8 @@ void v_cycle_mpi(std::vector<double>& u_local, const std::vector<double>& phi_lo
 
 void w_cycle_mpi(std::vector<double>& u_local, const std::vector<double>& phi_local, 
                  int N, int rank, int P, int nu1, int nu2, double w) {
-    if (N - 1 < P || N <= 3) {
+    int N_coarse = (N - 1) / 2 + 1;
+    if (N_coarse - 1 < P || N <= 3) {
         gather_and_solve(u_local, phi_local, N, rank, P, nu1, nu2, w, 2);
         return;
     }
@@ -269,7 +271,8 @@ void w_cycle_mpi(std::vector<double>& u_local, const std::vector<double>& phi_lo
 
 void fmg_cycle_mpi(std::vector<double>& u_local, const std::vector<double>& phi_local, 
                    int N, int rank, int P, int nu1, int nu2, double w) {
-    if (N - 1 < P || N <= 3) {
+    int N_coarse_check = (N - 1) / 2 + 1;
+    if (N_coarse_check - 1 < P || N <= 3) {
         gather_and_solve(u_local, phi_local, N, rank, P, nu1, nu2, w, 3);
         return;
     }
