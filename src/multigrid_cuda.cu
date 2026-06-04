@@ -4,6 +4,16 @@
 
 #define THREADS_PER_BLOCK 256
 
+#define checkCuda(ans) { gpuAssert((ans), __FILE__, __LINE__); }
+inline void gpuAssert(cudaError_t code, const char *file, int line, bool abort=true)
+{
+   if (code != cudaSuccess) 
+   {
+      fprintf(stderr,"GPUassert: %s %s %d\n", cudaGetErrorString(code), file, line);
+      if (abort) exit(code);
+   }
+}
+
 __device__ __host__ inline int div_up(int a, int b) { return (a + b - 1) / b; }
 __device__ inline int idx_d(int i, int j, int N) { return i * N + j; }
 
@@ -178,18 +188,19 @@ void v_cycle_cuda_run(std::vector<double>& u, const std::vector<double>& phi, in
     double* d_phi;
     size_t size = N * N * sizeof(double);
 
-    cudaMalloc(&d_u, size);
-    cudaMalloc(&d_phi, size);
+    checkCuda(cudaMalloc(&d_u, size));
+    checkCuda(cudaMalloc(&d_phi, size));
 
-    // Only transfer across PCIe ONCE
-    cudaMemcpy(d_u, u.data(), size, cudaMemcpyHostToDevice);
-    cudaMemcpy(d_phi, phi.data(), size, cudaMemcpyHostToDevice);
+    checkCuda(cudaMemcpy(d_u, u.data(), size, cudaMemcpyHostToDevice));
+    checkCuda(cudaMemcpy(d_phi, phi.data(), size, cudaMemcpyHostToDevice));
 
     for (int iter = 0; iter < iters; iter++) {
         v_cycle_device(d_u, d_phi, N, nu1, nu2, w);
+        checkCuda(cudaPeekAtLastError());
+        checkCuda(cudaDeviceSynchronize());
     }
 
-    cudaMemcpy(u.data(), d_u, size, cudaMemcpyDeviceToHost);
+    checkCuda(cudaMemcpy(u.data(), d_u, size, cudaMemcpyDeviceToHost));
 
     cudaFree(d_u);
     cudaFree(d_phi);
