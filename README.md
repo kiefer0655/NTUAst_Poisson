@@ -102,14 +102,22 @@ Transitioning this from a basic serial code to a multi-architecture HPC codebase
 **Problem:** Running 144 threads natively was actually drastically *slower* than running 16 threads.
 **Resolution:** Discovered the "Memory Wall" bottleneck (detailed below in Results Analysis).
 
+### 4. The 32-bit Integer Limit ($N=32769$)
+**Problem:** Attempting to scale to $N=65537$ resulted in an immediate Segmentation Fault across all solvers.
+**Cause:** Our matrices are 1-Dimensional arrays accessed via the standard formula `i * N + j`. For $N=65537$, the total number of cells ($N \times N$) is **$4,295,098,369$**. However, standard C++ signed 32-bit integers cap out at **$2,147,483,647$**. The index physically overflowed into the negatives, triggering a violent out-of-bounds memory access!
+**Resolution:** We clamped the absolute maximal grid size to $N=32769$ ($1.07$ Billion Cells), which fits safely under the 32-bit integer ceiling.
+
 ---
 
-## 7. Benchmarking Methodology
+## 7. Benchmarking Methodology & Final Parameters
+To ensure strict scientific accuracy across our massive computational domains, we enforced the following parameters:
 
-To generate fair and scientifically sound data:
-1. **Isolated Binaries:** Separate `benchmark_cpu`, `benchmark_gpu`, and `benchmark_mpi` targets were built to ensure GPU libraries didn't bloat the CPU profiling.
-2. **Time Measurement:** `std::chrono::high_resolution_clock` was used strictly around the mathematical kernels (excluding initialization and `MPI_Init` overhead).
-3. **Scaling Grids:** Benchmarks sweep exponentially from $33 \times 33$ to $2049 \times 2049$ to prove Big-O theoretical limits.
+1. **Averaged Execution:** Every single combination of Grid Size, Solver Method, and Hardware Architecture was executed **3 independent times**. The metrics shown in all graphs are the arithmetic mean of these 3 runs, smoothing out minor OS interrupts and cache misses.
+2. **Algorithmic Limits:** 
+   - **SOR (Baseline):** Capped at $N=2049$ (4.19 Million cells). Because SOR scales at $O(N^2)$, pushing it further would take exponential amounts of time.
+   - **W-Cycle:** Capped at $N=8193$ (67 Million cells). In MPI distributed environments, the W-Cycle visits the deepest coarse grids too frequently, causing thread-synchronization communication to completely dominate mathematical computation. Furthermore, at extreme scales ($N \ge 4097$), the MPI W-Cycle experiences severe numerical instability, with the $L_2$ error norm violently exploding to `NaN`!
+   - **FMG & V-Cycle:** Swept up to the strict 32-bit integer limit at $N=32769$ (1.07 Billion cells).
+3. **Time Measurement:** `std::chrono::high_resolution_clock` was used strictly around the mathematical kernels (excluding initialization and `MPI_Init` overhead).
 
 ---
 
@@ -126,20 +134,48 @@ However, **FMG (Full Multigrid)** and the **V-Cycle** showcase a flat linear $O(
 ### 2. V-Cycle vs W-Cycle 
 While W-Cycles theoretically offer better error reduction per cycle by spending more time on the coarse grids, our benchmarking proves it is highly inefficient for Parallel execution. The constant bouncing between levels creates immense **Thread Synchronization Overhead**. The V-Cycle (and by extension, FMG) drastically outperforms the W-Cycle in pure wall-clock execution time.
 
-### 3. Hardware Scaling: CPU vs GPU vs MPI
-The **RTX 4090 GPU** completely destroyed the CPU architectures on the $2049 \times 2049$ grid:
-- It achieved nearly a **10x - 12x speedup** over the 144-core CPU.
-- Stencil algorithms (like Poisson Smoothers) are overwhelmingly **Memory Bandwidth Bound** rather than Compute Bound. The RTX 4090's 1,008 GB/s GDDR6X VRAM bandwidth allowed it to chew through the grid infinitely faster than the Xeon Platinum's standard DDR4 memory controller could feed its 72 cores.
+### 3. Extreme Scaling: The GPU VRAM Cliff & MPI Cache Comeback
+Our tests swept from $N=33$ all the way to the 32-bit integer limit at $N=32769$ (1.07 Billion cells, ~34 GB total footprint). The scaling behavior inverted spectacularly at the absolute limit:
+
+- **The GPU Reign ($N \le 16385$):** For grids that physically fit inside the RTX 4090's 24GB VRAM, the GPU was absolutely untouchable, completely destroying the 144-core CPU by over 10x speedups, finishing 268 Million cells in **~3.2 seconds**.
+- **The Unified Memory Cliff ($N = 32769$):** At 1 Billion cells, the 34GB arrays exceeded the RTX 4090's 24GB VRAM. We utilized `cudaMallocManaged` (CUDA Unified Memory), forcing the NVIDIA driver to page-fault and swap memory over the PCIe Gen 4 bus. Stripped of its 1,008 GB/s GDDR6X bandwidth, the GPU performance tanked violently, taking **50.6 seconds**.
+- **The MPI Cache Triumphant Comeback:** At $N=32769$, the OpenMP Shared-Memory CPU bottlenecked entirely on RAM bandwidth (**33.3 seconds**). However, the **MPI Distributed Memory** solver (64 processes) sliced the massive 34GB array into 64 isolated domains. These smaller domains perfectly populated the Xeon Platinum's massive local L2/L3 caches! By avoiding raw RAM latency, the MPI solver finished the 1-Billion cell grid in an astonishing **3.84 seconds**—beating the GPU by 13x, and OpenMP by nearly 9x!
 
 ![Hardware Comparison](results/images/hardware_comparison.png)
 
-### 4. Strong Scaling & Amdahl's Law
-We ran a Strong Scaling benchmark on `ws7` (keeping $N=2049$ fixed and sweeping OpenMP threads from 1 to 144).
+### 4. V-Cycle vs Full Multigrid (FMG)
+While both scale linearly ($O(N)$), the benchmark proves why FMG is the gold standard for Multigrid algorithms. 
+- The V-Cycle requires 5 to 10 iterations to drop the error down to acceptable levels, moving up and down the hierarchy multiple times.
+- FMG executes a single, nested V-Cycle structure just **once** (1 Iteration). By providing a mathematically perfect initial guess via interpolation from the coarse grids, FMG achieves a lower numerical error in 1 iteration than the V-Cycle achieves in 5.
+- Our execution results reflect this: FMG completes roughly **3x faster** than the V-Cycle across all grid sizes.
+
+![V-Cycle vs FMG](results/images/vcycle_vs_fmg.png)
+
+### 5. Numerical Accuracy & Error Convergence
+To prove our implementations are mathematically correct, we computed the continuous $L_2$ error norm against the true analytical solution $u(x,y) = \sin(\pi x)\sin(\pi y)$. 
+- As the grid size $N$ doubles, the $L_2$ error norm reliably drops by a factor of exactly 4. 
+- This flawlessly mirrors the theoretical $O(h^2)$ truncation error of the standard 5-point discrete Laplacian stencil.
+
+![Error Convergence](results/images/error_convergence.png)
+
+### 6. Strong Scaling & Amdahl's Law
+We ran two distinct Strong Scaling experiments on the 144-Core Xeon workstation:
+
+**A. OpenMP Shared Memory Scaling (Grid N=2049)**
+Sweeping OpenMP threads from 1 to 144 on a single shared memory pool:
 - **The Sweet Spot:** Performance scaled perfectly from 1 to 8 threads.
 - **The Memory Wall:** Between 8 and 16 threads, performance flattened. The CPU cores were calculating the math faster than the RAM could supply the data.
-- **The Overhead Collapse (Amdahl's Law):** At 144 threads, the FMG algorithm took *longer* than running on a single thread! Forcing 144 threads to wake up, synchronize, and divide a tiny $3 \times 3$ grid at the bottom of the V-Cycle meant the CPU spent 99% of its time coordinating threads and 1% doing math.
+- **The Overhead Collapse:** At 144 threads, the FMG algorithm took *longer* than running on a single thread. Thread synchronization overhead for tiny grids dominated the math.
 
-![Strong Scaling](results/images/strong_scaling.png)
+![OpenMP Strong Scaling](results/images/strong_scaling.png)
+
+**B. MPI Distributed Memory Scaling (Extreme Grid N=32769)**
+Sweeping MPI processes from 1 to 64 on the massive 1-Billion cell grid (~34 GB footprint):
+- By slicing the massive array into smaller, completely isolated memory domains, MPI completely circumvented the OpenMP "Memory Wall" bottleneck.
+- The strong scaling for FMG and V-Cycle matches the theoretical **Ideal Linear Scaling** nearly perfectly across all 64 processes!
+- This visually proves that Distributed Memory partitioning is vastly superior to Shared Memory threading for Memory-Bandwidth-bound stencil algorithms at extreme scales.
+
+![MPI Strong Scaling](results/images/mpi_strong_scaling.png)
 
 ---
 
