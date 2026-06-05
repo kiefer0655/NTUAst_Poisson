@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Multigrid Sonification</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="container">
+        <header>
+            <h1>Interactive Poisson Solver</h1>
+            <p>Click and drag on the canvas to inject charge. The Multigrid algorithm solves $\nabla^2 u = \rho$ in real-time. Listen to the convergence!</p>
+        </header>
+
+        <div id="main-content">
+            <canvas id="gridCanvas" width="514" height="514"></canvas>
+            
+            <div id="controls">
+                <div class="stat-box">
+                    <span>Residual Norm:</span>
+                    <span id="residualDisplay" class="neon-text">0.0000e+00</span>
+                </div>
+                
+                <div class="stat-box">
+                    <span>Charge Brush Size:</span>
+                    <input type="range" id="brushSize" min="1" max="20" value="5">
+                </div>
+                
+                <div class="stat-box">
+                    <span>Charge Amount:</span>
+                    <input type="range" id="chargeAmount" min="-5000" max="5000" value="2000">
+                </div>
+
+                <div class="stat-box">
+                    <span>Audio:</span>
+                    <button id="toggleAudio" class="btn">Enable Sonification</button>
+                </div>
+
+                <button id="btnReset" class="btn btn-danger">Reset Grid</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Load the compiled WebAssembly JS wrapper -->
+    <script src="poisson.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
