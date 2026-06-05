@@ -3,7 +3,9 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#ifndef __EMSCRIPTEN__
 #include <omp.h>
+#endif
 #include "utils.h"
 
 

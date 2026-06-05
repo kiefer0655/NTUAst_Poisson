@@ -4,7 +4,9 @@
 #include <cmath>
 #include <algorithm>
 #include <string>
+#ifndef __EMSCRIPTEN__
 #include <omp.h>
+#endif
 #include "utils.h"
 
 inline void sor_update(

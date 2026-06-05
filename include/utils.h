@@ -5,7 +5,9 @@
 #include <cmath>
 #include <algorithm>
 #include <string>
+#ifndef __EMSCRIPTEN__
 #include <omp.h>
+#endif
 
 //indexing tools
 inline int idx(int i, int j, int N){
