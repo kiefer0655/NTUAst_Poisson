@@ -1,3 +1,5 @@
+import Module from './poisson.js';
+
 const N = 257; // Grid size
 let solver = null;
 let isDrawing = false;
