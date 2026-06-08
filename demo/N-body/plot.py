@@ -2,7 +2,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from matplotlib.animation import FuncAnimation
 
-INPUT_FILE = "results/nbody_particles.csv"
+
+INPUT_FILE = "results/orbit.csv"
+
+GIF_FILE = "results/orbit.gif"
+MP4_FILE = "results/orbit.mp4"
 
 df = pd.read_csv(INPUT_FILE)
 
@@ -32,5 +36,13 @@ ani = FuncAnimation(
     interval=30,
     repeat=True
 )
+
+# Save as GIF
+ani.save(GIF_FILE, writer="pillow", fps=30)
+print(f"Saved {GIF_FILE}")
+
+# Save as MP4
+ani.save(MP4_FILE, writer="ffmpeg", fps=30, dpi=150)
+print(f"Saved {MP4_FILE}")
 
 plt.show()
