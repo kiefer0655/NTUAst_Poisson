@@ -1,0 +1,28 @@
+cd /mnt/d/NTU/大二/計天/NTUAst_Poisson/demo/Thermal
+
+
+## Open MD
+g++ -O2 -fopenmp -o heat_demo heat_demo.cpp \
+    ../../src/multigrid.cpp \
+    -I../../include -lm
+
+./heat_demo 8 #可切換threads
+
+
+## MPI
+mpicxx -O2 -std=c++17 -I../../include -fopenmp \
+    -o heat_demo_mpi \
+    heat_demo_mpi.cpp \
+    ../../src/multigrid_mpi.cpp \
+    ../../src/multigrid.cpp \
+    -lm
+mpirun -np 4 ./heat_demo_mpi
+
+
+
+
+
+
+
+
+
